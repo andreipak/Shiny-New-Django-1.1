@@ -1,0 +1,80 @@
+In [6]: Department.objects.all().aggregate(Count('id'))
+Out[6]: {'id__count': 4}
+
+In [7]: Department.objects.all().count()
+Out[7]: 4
+
+In [8]: connection.queries.pop()
+Out[8]: {'sql': u'SELECT COUNT(*) FROM "hrms_department"', 'time': '0.000'}
+
+
+In [18]: [(el.dept_name, el.employee__count) for el in Department.objects.all().annotate(Count('employee'))]
+Out[18]: 
+[(u'Sales', 1111),
+ (u'Engineering', 1040),
+ (u'Finanace', 1095),
+ (u'Facilities', 1110)]
+
+In [19]: connection.queries.pop()
+Out[19]: 
+{'sql': u'SELECT "hrms_department"."id", "hrms_department"."dept_name", "hrms_department"."established_on", COUNT("hrms_employee"."id") AS "employee__count" FROM "hrms_department" LEFT OUTER JOIN "hrms_employee" ON ("hrms_department"."id" = "hrms_employee"."department_id") GROUP BY "hrms_department"."id", "hrms_department"."dept_name", "hrms_department"."established_on"',
+ 'time': '0.003'}
+
+In [20]:
+
+In [24]:  Department.objects.all().values('dept_name').annotate(Count('employee'))
+   ....: 
+Out[24]: [{'dept_name': u'Engineering', 'employee__count': 1040}, {'dept_name': u'Facilities', 'employee__count': 1110}, {'dept_name': u'Finanace', 'employee__count': 1095}, {'dept_name': u'Sales', 'employee__count': 1111}]
+
+In [25]: connection.queries.pop()
+Out[25]: 
+{'sql': u'SELECT "hrms_department"."dept_name", COUNT("hrms_employee"."id") AS "employee__count" FROM "hrms_department" LEFT OUTER JOIN "hrms_employee" ON ("hrms_department"."id" = "hrms_employee"."department_id") GROUP BY "hrms_department"."dept_name" LIMIT 21',
+ 'time': '0.071'}
+
+In [26]: Employee.objects.all().aggregate(Sum('pay'))
+Out[26]: {'pay__sum': 12268838}
+
+In [27]: connection.queries.pop()
+Out[27]: 
+{'sql': u'SELECT SUM("hrms_employee"."pay") AS "pay__sum" FROM "hrms_employee"',
+ 'time': '0.004'}
+
+In [31]: Department.objects.all().aggregate(Min('established_on'))
+Out[31]: {'established_on__min': datetime.date(2005, 6, 18)}
+
+In [32]: connection.queries.pop()
+Out[32]: 
+{'sql': u'SELECT MIN("hrms_department"."established_on") AS "established_on__min" FROM "hrms_department"',
+ 'time': '0.000'}
+ 
+ In [34]: Department.objects.values('dept_name', 'established_on').aggregate(Min('employee__joined_on'))
+Out[34]: {}
+
+In [35]: Department.objects.values('dept_name', 'established_on').annotate(Min('employee__joined_on'))
+Out[35]: [{'dept_name': u'Engineering', 'established_on': datetime.date(2005, 7, 18), 'employee__joined_on__min': datetime.date(2005, 7, 18)}, {'dept_name': u'Facilities', 'established_on': datetime.date(2006, 1, 18), 'employee__joined_on__min': datetime.date(2006, 1, 18)}, {'dept_name': u'Finanace', 'established_on': datetime.date(2005, 9, 18), 'employee__joined_on__min': datetime.date(2005, 9, 18)}, {'dept_name': u'Sales', 'established_on': datetime.date(2005, 6, 18), 'employee__joined_on__min': datetime.date(2005, 6, 18)}]
+
+In [36]: connection.queries.pop()
+Out[36]: 
+{'sql': u'SELECT "hrms_department"."dept_name", "hrms_department"."established_on", MIN("hrms_employee"."joined_on") AS "employee__joined_on__min" FROM "hrms_department" LEFT OUTER JOIN "hrms_employee" ON ("hrms_department"."id" = "hrms_employee"."department_id") GROUP BY "hrms_department"."dept_name", "hrms_department"."established_on" LIMIT 21',
+ 'time': '0.092'}
+ 
+In [45]: Department.objects.all().annotate(avg_pay = Avg('employee__pay')).order_by('avg_pay')
+Out[45]: [<Department: Sales>, <Department: Finanace>, <Department: Engineering>, <Department: Facilities>]
+
+In [46]: Department.objects.all().values('dept_name').annotate(avg_pay = Avg('employee__pay')).order_by('avg_pay')
+Out[46]: [{'dept_name': u'Sales', 'avg_pay': 2785.1872187218723}, {'dept_name': u'Finanace', 'avg_pay': 2791.1954337899542}, {'dept_name': u'Engineering', 'avg_pay': 2836.9875000000002}, {'dept_name': u'Facilities', 'avg_pay': 2853.7558558558558}]
+
+In [47]: connection.queries.pop()
+Out[47]: 
+{'sql': u'SELECT "hrms_department"."dept_name", AVG("hrms_employee"."pay") AS "avg_pay" FROM "hrms_department" LEFT OUTER JOIN "hrms_employee" ON ("hrms_department"."id" = "hrms_employee"."department_id") GROUP BY "hrms_department"."dept_name" ORDER BY avg_pay ASC LIMIT 21',
+ 'time': '0.078'}
+
+In [10]: Employee.objects.values('emp_name').annotate(Count('id'))
+Out[10]: [{'emp_name': u'Abatt\xe2rik, Ar', 'id__count': 12}, {'emp_name': u'Adanedhel', 'id__count': 15}, {'emp_name': u'Adanel', 'id__count': 15}, {'emp_name': u'Adrahil', 'id__count': 15}, {'emp_name': u'Adrahil II', 'id__count': 6}, {'emp_name': u'Ad\xfbnakh\xf4r, Ar', 'id__count': 9}, {'emp_name': u'Aegnor', 'id__count': 19}, {'emp_name': u'Agarwaen', 'id__count': 10}, {'emp_name': u'Aikan\xe1ro', 'id__count': 19}, {'emp_name': u'Aiwendil', 'id__count': 13}, {'emp_name': u'Alatar', 'id__count': 17}, {'emp_name': u'Alat\xe1riel', 'id__count': 11}, {'emp_name': u'Alcarin, Tar', 'id__count': 8}, {'emp_name': u'Aldamir', 'id__count': 9}, {'emp_name': u'Aldarion, Tar', 'id__count': 11}, {'emp_name': u'Aldaron', 'id__count': 15}, {'emp_name': u'Aldor', 'id__count': 11}, {'emp_name': u'Amandil', 'id__count': 28}, {'emp_name': u'Amandil, Tar', 'id__count': 7}, {'emp_name': u'Amd\xedr', 'id__count': 14}, '...(remaining elements truncated)...']
+
+
+{'sql': u'SELECT "hrms_employee"."emp_name", COUNT("hrms_employee"."id") AS "id__count" FROM "hrms_employee" GROUP BY "hrms_employee"."emp_name" LIMIT 21',
+ 'time': '0.060'}
+
+
+
